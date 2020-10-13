@@ -1,12 +1,26 @@
 package com.bsuir.util
 
+import WorldCord
 import entity.Pair
 import entity.Polygon
 import entity.Vertice
+import javafx.scene.canvas.Canvas
+import javafx.scene.canvas.GraphicsContext
+import javafx.scene.image.PixelWriter
 import javafx.scene.paint.Color
 
-class DrawUtil {
-    public fun drawPolygon(polygon: Polygon, vertices: List<Vertice>) {
+class DrawUtil(private val width: Double, private val height: Double, private val canvas : Canvas){
+
+    private val gc: GraphicsContext = canvas.graphicsContext2D
+    private val pw: PixelWriter
+    private val pairSet: HashSet<Pair>
+
+    init {
+        pw = gc.pixelWriter
+        pairSet = HashSet()
+    }
+
+    fun drawPolygon(polygon: Polygon, vertices: List<Vertice>) {
         for (i in 1 until polygon.size()) {
             val num1 = polygon.getVerticeNumber(i - 1) - 1
             val num2 = polygon.getVerticeNumber(i) - 1
@@ -17,6 +31,14 @@ class DrawUtil {
         val last = polygon.getVerticeNumber(polygon.size() - 1) - 1
         val pair = createPair(first, last, vertices)
         drawBrezenhem(pair)
+    }
+
+    fun redrawPolygons(worldcords: WorldCord) {
+        gc.clearRect(0.0, 0.0, width, height)
+        pairSet.clear();
+        worldcords.polygons.forEach{
+            drawPolygon(it, worldcords.transformedVertices);
+        }
     }
 
     private fun createPair(num1: Int, num2: Int, vertices: List<Vertice>): Pair {
@@ -115,4 +137,5 @@ class DrawUtil {
     private fun round(x: Double): Int {
         return Math.round(x).toInt()
     }
+
 }
