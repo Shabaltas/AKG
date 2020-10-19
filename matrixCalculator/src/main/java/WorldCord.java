@@ -107,7 +107,8 @@ public class WorldCord {
         turnXMatrix.setEntry(1, 2, -Math.sin(xAngleRadian));
         turnXMatrix.setEntry(2, 2, Math.cos(xAngleRadian));
         turnXMatrix.setEntry(2, 1, Math.sin(xAngleRadian));
-        all = all.multiply(turnXMatrix);
+//        all = all.multiply(turnXMatrix);
+        transform(turnXMatrix);
         //multiplyMatrix(turnXMatrix);
         return this;
     }
@@ -117,8 +118,9 @@ public class WorldCord {
         turnYMatrix.setEntry(0, 2, Math.sin(yAngleRadian));
         turnYMatrix.setEntry(2, 0, -Math.sin(yAngleRadian));
         turnYMatrix.setEntry(2, 2, Math.cos(yAngleRadian));
-        all = all.multiply(turnYMatrix);
+//        all = all.multiply(turnYMatrix);
         //multiplyMatrix(turnYMatrix);
+        transform(turnYMatrix);
         return this;
     }
 
@@ -127,8 +129,9 @@ public class WorldCord {
         turnZMatrix.setEntry(0, 1, -Math.sin(zAngleRadian));
         turnZMatrix.setEntry(1, 0, Math.sin(zAngleRadian));
         turnZMatrix.setEntry(1, 1, Math.cos(zAngleRadian));
-        all = all.multiply(turnZMatrix);
+//        all = all.multiply(turnZMatrix);
         //multiplyMatrix(turnZMatrix);
+        transform(turnZMatrix);
         return this;
     }
 
