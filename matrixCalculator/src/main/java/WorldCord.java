@@ -34,7 +34,7 @@ public class WorldCord {
             {0, 0, 0, 1}});
     private RealMatrix viewport, view, projection, all;
 
-    private List<Vertice> initialVertices;
+    private List<Vertice> readyVertices;
     private List<Polygon> polygons;
 
     public List<Polygon> getPolygons() {
@@ -42,12 +42,12 @@ public class WorldCord {
     }
 
     private List<Vertice> transformedVertices;
-
+    private RealVector eye, target, up;
     private double width, height;
 
     public WorldCord(List<Vertice> vertices,List<Polygon> polygons, double viewWidth, double viewHeight) {
-        initialVertices = vertices;
         transformedVertices = new ArrayList<>(vertices.size());
+        readyVertices = new ArrayList<>(vertices.size());
         vertices.forEach(vertice -> {
             transformedVertices.add(new Vertice(vertice.getX(), vertice.getY(), vertice.getZ(), vertice.getW(), vertice.getNumber()));
         });
@@ -56,8 +56,8 @@ public class WorldCord {
         this.polygons = polygons;
     }
 
-    public List<Vertice> getInitialVertices() {
-        return initialVertices;
+    public List<Vertice> getReadyVertices() {
+        return readyVertices;
     }
 
     public List<Vertice> getTransformedVertices() {
@@ -77,10 +77,18 @@ public class WorldCord {
     }
 
     public WorldCord translateVertices(double[] translation) {
-        translateMatrix.setColumn(3, new double[]{translation[0], translation[1], translation[2], 1});
-        transform(translateMatrix);
-        //all = all.multiply(translateMatrix);
-        //multiplyMatrix(translateMatrix);
+        //translateMatrix.setColumn(3, new double[]{translation[0], translation[1], translation[2], 1});
+        changeView(translation);
+        allChangesMatrix();
+        //transform(translateMatrix);
+        return this;
+    }
+
+    public WorldCord scaleVertices(double[] scale) {
+        for (int i = 0; i < scale.length; i++) {
+            scaleMatrix.setEntry(i, i, scale[i]);
+        }
+        transform(scaleMatrix);
         return this;
     }
 
@@ -93,23 +101,13 @@ public class WorldCord {
             vertice.setW(newCord[3]/newCord[3]);
         });
     }
-    public WorldCord scaleVertices(double[] scale) {
-        for (int i = 0; i < scale.length; i++) {
-            scaleMatrix.setEntry(i, i, scale[i]);
-        }
-        transform(scaleMatrix);
-        //multiplyMatrix(scaleMatrix);
-        return this;
-    }
 
     public WorldCord turnXVertices(double xAngleRadian) {
         turnXMatrix.setEntry(1, 1, Math.cos(xAngleRadian));
         turnXMatrix.setEntry(1, 2, -Math.sin(xAngleRadian));
         turnXMatrix.setEntry(2, 2, Math.cos(xAngleRadian));
         turnXMatrix.setEntry(2, 1, Math.sin(xAngleRadian));
-//        all = all.multiply(turnXMatrix);
         transform(turnXMatrix);
-        //multiplyMatrix(turnXMatrix);
         return this;
     }
 
@@ -129,8 +127,6 @@ public class WorldCord {
         turnZMatrix.setEntry(0, 1, -Math.sin(zAngleRadian));
         turnZMatrix.setEntry(1, 0, Math.sin(zAngleRadian));
         turnZMatrix.setEntry(1, 1, Math.cos(zAngleRadian));
-//        all = all.multiply(turnZMatrix);
-        //multiplyMatrix(turnZMatrix);
         transform(turnZMatrix);
         return this;
     }
@@ -146,6 +142,26 @@ public class WorldCord {
     }
 
     public WorldCord createView(RealVector eye, RealVector target, RealVector up) {
+        this.eye = eye;
+        this.target = target;
+        this.up = up;
+        updateViewMatrix(eye, target, up);
+        return this;
+    }
+
+    private void changeView(double[] d) {
+        eye.setEntry(0, eye.getEntry(0) + d[0]);
+        eye.setEntry(1, eye.getEntry(1) + d[1]);
+        eye.setEntry(2, eye.getEntry(2) + d[2]);
+
+        target.setEntry(0, target.getEntry(0) + d[0]);
+        target.setEntry(1, target.getEntry(1) + d[1]);
+        target.setEntry(2, target.getEntry(2) + d[2]);
+
+        updateViewMatrix(eye, target, up);
+    }
+
+    private void updateViewMatrix(RealVector eye, RealVector target, RealVector up) {
         RealVector ZAxis = eye.subtract(target).unitVector();
         RealVector XAxis = cross(up, ZAxis).unitVector();
         RealVector YAxis = up;//cross(ZAxis, XAxis).unitVector();
@@ -155,9 +171,7 @@ public class WorldCord {
                 {ZAxis.getEntry(0), ZAxis.getEntry(1), ZAxis.getEntry(2), -scalarMultiply(ZAxis, eye)},
                 {0, 0, 0, 1}
         });
-        return this;
     }
-
     public WorldCord createProjection(double zNear, double zfar) {
         projection = MatrixUtils.createRealMatrix(new double[][]{
                 /*{2 * zNear / width, 0, 0, 0},
@@ -176,7 +190,16 @@ public class WorldCord {
     }
 
     public WorldCord lastTransform() {
-        transform(all);
+        readyVertices.clear();
+        transformedVertices.forEach(vertice -> {
+            double[] newCord = all.operate(vertice.getVector());
+            readyVertices.add(new Vertice(
+                    newCord[0]/newCord[3],
+                    newCord[1]/newCord[3],
+                    newCord[2]/newCord[3],
+                    newCord[3]/newCord[3],
+                    vertice.getNumber()));
+        });
         return this;
     }
     private double scalarMultiply(RealVector v1, RealVector v2) {
@@ -189,14 +212,5 @@ public class WorldCord {
         double y = vector1.getEntry(2) * vector2.getEntry(0) - vector1.getEntry(0) * vector2.getEntry(2);
         double z = vector1.getEntry(0) * vector2.getEntry(1) - vector1.getEntry(1) * vector2.getEntry(0);
         return new ArrayRealVector(new double[]{ x, y, z}, false);
-    }
-    private void multiplyMatrix(RealMatrix toMatrix) {
-        transformedVertices.forEach( vertice -> {
-            double[] mult = toMatrix.operate(vertice.getVector());
-            vertice.setX(mult[0]);
-            vertice.setY(mult[1]);
-            vertice.setZ(mult[2]);
-            vertice.setW(mult[3]);
-        });
     }
 }

@@ -55,6 +55,7 @@ public class ObjParser {
                         new ArrayRealVector(new double[]{0, 0, 0}, false),
                         new ArrayRealVector(new double[]{0, 1, 0}, false))
                 .createViewPort(0, 0)
-                .allChangesMatrix();
+                .allChangesMatrix()
+                .lastTransform();
     }
 }

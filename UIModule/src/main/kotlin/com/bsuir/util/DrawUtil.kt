@@ -37,7 +37,7 @@ class DrawUtil(private val width: Double, private val height: Double, private va
         gc.clearRect(0.0, 0.0, width, height)
         pairSet.clear();
         worldcords.polygons.forEach{
-            drawPolygon(it, worldcords.transformedVertices);
+            drawPolygon(it, worldcords.readyVertices);
         }
     }
 
