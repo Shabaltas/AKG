@@ -16,6 +16,11 @@ public class WorldCord {
             {0, 1, 0, 0},
             {0, 0, 1, 0},
             {0, 0, 0, 1}});
+    private RealMatrix sumTranslateMatrix = MatrixUtils.createRealMatrix(new double[][]{
+            {1, 0, 0, 0},
+            {0, 1, 0, 0},
+            {0, 0, 1, 0},
+            {0, 0, 0, 1}});
     private RealMatrix scaleMatrix = MatrixUtils.createRealDiagonalMatrix(new double[]{0, 0, 0, 1});
     private RealMatrix turnXMatrix = MatrixUtils.createRealMatrix(new double[][]{
             {1, 0, 0, 0},
@@ -76,12 +81,30 @@ public class WorldCord {
         return view;
     }
 
-    public WorldCord translateVertices(double[] translation) {
+    public WorldCord changeCenter(double[] translation) {
         //translateMatrix.setColumn(3, new double[]{translation[0], translation[1], translation[2], 1});
         changeView(translation);
         allChangesMatrix();
         //transform(translateMatrix);
         return this;
+    }
+
+    public WorldCord translateVertices(double[] translation) {
+        translateMatrix.setColumn(3, new double[]{translation[0], translation[1], translation[2], 1});
+        sumTranslateMatrix.setEntry(0, 3, sumTranslateMatrix.getEntry(0, 3) + translation[0]);
+        sumTranslateMatrix.setEntry(1, 3, sumTranslateMatrix.getEntry(1, 3) + translation[1]);
+        sumTranslateMatrix.setEntry(2, 3, sumTranslateMatrix.getEntry(2, 3) + translation[2]);
+        transform(translateMatrix);
+        return this;
+    }
+
+    public WorldCord translateVerticesCamera(double[] translation) {
+        //translateMatrix.setColumn(3, new double[]{translation[0], translation[1], translation[2], 1});
+        translateMatrix.setEntry(0, 3, translateMatrix.getEntry(0, 3) + translation[0]);
+        translateMatrix.setEntry(1, 3, translateMatrix.getEntry(1, 3) + translation[1]);
+        translateMatrix.setEntry(2, 3, translateMatrix.getEntry(2, 3) + translation[2]);
+
+        return changeCenter(translation);
     }
 
     public WorldCord scaleVertices(double[] scale) {
@@ -116,8 +139,28 @@ public class WorldCord {
         turnYMatrix.setEntry(0, 2, Math.sin(yAngleRadian));
         turnYMatrix.setEntry(2, 0, -Math.sin(yAngleRadian));
         turnYMatrix.setEntry(2, 2, Math.cos(yAngleRadian));
-//        all = all.multiply(turnYMatrix);
-        //multiplyMatrix(turnYMatrix);
+        //vertices.forEach(v -> translate matrix with third column - v[x], v[y], v[z], 1 * turnY * translate matrix with third column - -v[x], -v[y], -v[z],)
+        transformedVertices.forEach(vertice -> {
+            RealMatrix m = translateMatrix.copy();
+            m.setColumn(3, vertice.getVector());
+            RealMatrix notm = m.copy();
+            notm.multiplyEntry(0, 3, -1);
+            notm.multiplyEntry(1, 3, -1);
+            notm.multiplyEntry(2, 3, -1);
+            double[] newCord = notm.multiply(turnYMatrix).multiply(m).operate(vertice.getVector());
+            vertice.setX(newCord[0]/newCord[3]);
+            vertice.setY(newCord[1]/newCord[3]);
+            vertice.setZ(newCord[2]/newCord[3]);
+            vertice.setW(newCord[3]/newCord[3]);
+        });
+        return this;
+    }
+
+    public WorldCord turnWorldYVertices(double yAngleRadian) {
+        turnYMatrix.setEntry(0,0, Math.cos(yAngleRadian));
+        turnYMatrix.setEntry(0, 2, Math.sin(yAngleRadian));
+        turnYMatrix.setEntry(2, 0, -Math.sin(yAngleRadian));
+        turnYMatrix.setEntry(2, 2, Math.cos(yAngleRadian));
         transform(turnYMatrix);
         return this;
     }
@@ -158,6 +201,7 @@ public class WorldCord {
         target.setEntry(1, target.getEntry(1) + d[1]);
         target.setEntry(2, target.getEntry(2) + d[2]);
 
+
         updateViewMatrix(eye, target, up);
     }
 
@@ -176,8 +220,8 @@ public class WorldCord {
         projection = MatrixUtils.createRealMatrix(new double[][]{
                 /*{2 * zNear / width, 0, 0, 0},
                 {0, 2 * zNear / height, 0, 0},*/
-                {1 / (width / height * Math.tan((Math.PI/ 2) / 2)), 0, 0, 0},
-                {0, 1 / Math.tan((Math.PI / 2) / 2), 0, 0},
+                {1 / (width / height * Math.tan(Math.toRadians(30))), 0, 0, 0},
+                {0, 1 / Math.tan(Math.toRadians(30)), 0, 0},
                 {0, 0, zfar / (zNear - zfar), zNear * zfar / (zNear - zfar)},
                 {0, 0, -1, 0}
         });
