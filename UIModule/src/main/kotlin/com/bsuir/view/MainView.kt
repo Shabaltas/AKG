@@ -5,7 +5,7 @@ package com.bsuir.view
 import ObjParser.getWorldCoordsFromFile
 import WorldCord
 import com.bsuir.util.DrawUtil
-import com.bsuir.util.PairUtil
+import com.bsuir.util.PaintUtil
 import javafx.scene.canvas.Canvas
 import javafx.scene.input.KeyCode
 import javafx.scene.layout.BorderPane
@@ -20,16 +20,15 @@ class MainView : View() {
     private val width = canvas.width
     private val height = canvas.height
     private val angleStep = 0.1;
-    private val step = 0.1;
     private val drawUtils: DrawUtil
     init {
         drawUtils = DrawUtil(width, height, canvas);
         worldcords = getWorldCoordsFromFile(width, height)
         worldcords.polygons.forEach{
-            val intens = worldcords.needToDraw(it);
+            val intens = worldcords.getIntensity(it);
             if (intens >= 0.0) {
                 drawUtils.drawPolygon(it, worldcords.readyVertices, intens);
-                PairUtil.getLines(it, worldcords.readyVertices).forEach { pair -> drawUtils.drawBrezenhem(pair, intens) };
+                PaintUtil.getLines(it, worldcords.readyVertices).forEach { pair -> drawUtils.drawBrezenhem(pair, intens) };
             }
         }
 

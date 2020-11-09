@@ -1,4 +1,5 @@
 import entity.Polygon;
+import entity.ScreenVertice;
 import entity.Vertice;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.MatrixUtils;
@@ -39,7 +40,7 @@ public class WorldCord {
             {0, 0, 0, 1}});
     private RealMatrix viewport, view, projection, all;
 
-    private List<Vertice> readyVertices;
+    private List<ScreenVertice> readyVertices;
     private List<Polygon> polygons;
 
     public List<Polygon> getPolygons() {
@@ -63,7 +64,7 @@ public class WorldCord {
         this.polygons = polygons;
     }
 
-    public List<Vertice> getReadyVertices() {
+    public List<ScreenVertice> getReadyVertices() {
         return readyVertices;
     }
 
@@ -231,11 +232,10 @@ public class WorldCord {
         readyVertices.clear();
         transformedVertices.forEach(vertice -> {
             double[] newCord = all.operate(vertice.getVector());
-            readyVertices.add(new Vertice(
-                    newCord[0]/newCord[3],
-                    newCord[1]/newCord[3],
-                    newCord[2]/newCord[3],
-                    newCord[3]/newCord[3],
+            readyVertices.add(new ScreenVertice(
+                    (int)Math.round(newCord[0]/newCord[3]),
+                    (int)Math.round(newCord[1]/newCord[3]),
+                    (int)Math.round(newCord[2]/newCord[3]),
                     vertice.getNumber()));
         });
         return this;
@@ -267,7 +267,7 @@ public class WorldCord {
         }, false);
     }
 
-    public double needToDraw(Polygon polygon) {
+    public double getIntensity(Polygon polygon) {
         double[] v1 = transformedVertices.get(polygon.getVerticeNumber(0) - 1).getVector();
         double[] v2 = transformedVertices.get(polygon.getVerticeNumber(1) - 1).getVector();
         double[] v3 = transformedVertices.get(polygon.getVerticeNumber(2) - 1).getVector();

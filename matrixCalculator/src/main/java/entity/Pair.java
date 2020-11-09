@@ -4,11 +4,11 @@ import java.util.Objects;
 
 public class Pair {
 
-    public Vertice pos1;
+    public ScreenVertice pos1;
 
-    public Vertice pos2;
+    public ScreenVertice pos2;
 
-    public Pair(Vertice pos1, Vertice pos2) {
+    public Pair(ScreenVertice pos1, ScreenVertice pos2) {
         this.pos1 = pos1;
         this.pos2 = pos2;
     }

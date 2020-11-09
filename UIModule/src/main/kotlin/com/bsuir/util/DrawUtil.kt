@@ -3,7 +3,7 @@ package com.bsuir.util
 import WorldCord
 import entity.Pair
 import entity.Polygon
-import entity.Vertice
+import entity.ScreenVertice
 import javafx.scene.canvas.Canvas
 import javafx.scene.canvas.GraphicsContext
 import javafx.scene.image.PixelWriter
@@ -20,7 +20,7 @@ class DrawUtil(private val width: Double, private val height: Double, private va
         pairSet = HashSet()
     }
 
-    fun drawPolygon(polygon: Polygon, vertices: List<Vertice>, intens: Double) {
+    fun drawPolygon(polygon: Polygon, vertices: List<ScreenVertice>, intens: Double) {
         for (i in 1 until (polygon.size()-1)) {
             val num1 = polygon.getVerticeNumber(i - 1) - 1
             val num2 = polygon.getVerticeNumber(i) - 1
@@ -37,15 +37,15 @@ class DrawUtil(private val width: Double, private val height: Double, private va
         gc.clearRect(0.0, 0.0, width, height)
         pairSet.clear();
         worldcords.polygons.forEach{
-            val intense  = worldcords.needToDraw(it);
+            val intense  = worldcords.getIntensity(it);
             if (intense > 0.0) {
                 drawPolygon(it, worldcords.readyVertices, intense);
-                PairUtil.getLines(it, worldcords.readyVertices).forEach { pair -> drawBrezenhem(pair, intense) };
+                PaintUtil.getLines(it, worldcords.readyVertices).forEach { pair -> drawBrezenhem(pair, intense) };
             }
         }
     }
 
-    private fun createPair(num1: Int, num2: Int, vertices: List<Vertice>): Pair {
+    private fun createPair(num1: Int, num2: Int, vertices: List<ScreenVertice>): Pair {
         val point1 = vertices[num1]
         val point2 = vertices[num2]
         return if (num1 < num2) Pair(point1, point2) else Pair(point2, point1)
@@ -53,7 +53,7 @@ class DrawUtil(private val width: Double, private val height: Double, private va
 
     public fun drawBrezenhem(pair: Pair, intens: Double) {
         if (pairSet.add(pair)) {
-            drawBresenhamLine(round(pair.pos1.x), round(pair.pos1.y), round(pair.pos2.x), round(pair.pos2.y), intens)
+            drawBresenhamLine(pair.pos1.x, pair.pos1.y, pair.pos2.x, pair.pos2.y, intens)
         }
     }
 
@@ -63,7 +63,7 @@ class DrawUtil(private val width: Double, private val height: Double, private va
     }
 
     fun drawBresenhamLine(pair: Pair, intens: Double) {
-        drawBresenhamLine(round(pair.pos1.x), round(pair.pos1.y), round(pair.pos2.x), round(pair.pos2.y), intens)
+        drawBresenhamLine(pair.pos1.x, pair.pos1.y, pair.pos2.x, pair.pos2.y, intens)
     }
     fun drawBresenhamLine(xstart: Int, ystart: Int, xend: Int, yend: Int, intens: Double)
     {
@@ -142,10 +142,6 @@ class DrawUtil(private val width: Double, private val height: Double, private va
             return
         }
         pw.setColor(x, y, Color.rgb((intens*14).toInt(), (intens * 110).toInt(), (intens*54).toInt()))
-    }
-
-    private fun round(x: Double): Int {
-        return Math.round(x).toInt()
     }
 
 }
