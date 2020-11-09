@@ -20,24 +20,28 @@ class DrawUtil(private val width: Double, private val height: Double, private va
         pairSet = HashSet()
     }
 
-    fun drawPolygon(polygon: Polygon, vertices: List<Vertice>) {
-        for (i in 1 until polygon.size()) {
+    fun drawPolygon(polygon: Polygon, vertices: List<Vertice>, intens: Double) {
+        for (i in 1 until (polygon.size()-1)) {
             val num1 = polygon.getVerticeNumber(i - 1) - 1
             val num2 = polygon.getVerticeNumber(i) - 1
             val pair = createPair(num1, num2, vertices)
-            drawBrezenhem(pair)
+            drawBrezenhem(pair, intens)
         }
         val first = polygon.getVerticeNumber(0) - 1
         val last = polygon.getVerticeNumber(polygon.size() - 1) - 1
         val pair = createPair(first, last, vertices)
-        drawBrezenhem(pair)
+        drawBrezenhem(pair, intens)
     }
 
     fun redrawPolygons(worldcords: WorldCord) {
         gc.clearRect(0.0, 0.0, width, height)
         pairSet.clear();
         worldcords.polygons.forEach{
-            drawPolygon(it, worldcords.readyVertices);
+            val intense  = worldcords.needToDraw(it);
+            if (intense > 0.0) {
+                drawPolygon(it, worldcords.readyVertices, intense);
+                PairUtil.getLines(it, worldcords.readyVertices).forEach { pair -> drawBrezenhem(pair, intense) };
+            }
         }
     }
 
@@ -47,9 +51,9 @@ class DrawUtil(private val width: Double, private val height: Double, private va
         return if (num1 < num2) Pair(point1, point2) else Pair(point2, point1)
     }
 
-    private fun drawBrezenhem(pair: Pair) {
+    public fun drawBrezenhem(pair: Pair, intens: Double) {
         if (pairSet.add(pair)) {
-            drawBresenhamLine(round(pair.pos1.x), round(pair.pos1.y), round(pair.pos2.x), round(pair.pos2.y))
+            drawBresenhamLine(round(pair.pos1.x), round(pair.pos1.y), round(pair.pos2.x), round(pair.pos2.y), intens)
         }
     }
 
@@ -58,7 +62,10 @@ class DrawUtil(private val width: Double, private val height: Double, private va
         //возвращает 0, если аргумент (x) равен нулю; -1, если x < 0 и 1, если x > 0.
     }
 
-    fun drawBresenhamLine(xstart: Int, ystart: Int, xend: Int, yend: Int)
+    fun drawBresenhamLine(pair: Pair, intens: Double) {
+        drawBresenhamLine(round(pair.pos1.x), round(pair.pos1.y), round(pair.pos2.x), round(pair.pos2.y), intens)
+    }
+    fun drawBresenhamLine(xstart: Int, ystart: Int, xend: Int, yend: Int, intens: Double)
     {
         //println("x: ${xend}, y: ${yend} ")
         if (xstart > width && xend > width || xstart < 0 && xend < 0 || ystart > height && yend > height || ystart < 0 && yend < 0) {
@@ -113,7 +120,7 @@ class DrawUtil(private val width: Double, private val height: Double, private va
         x = xstart
         y = ystart
         err = el / 2
-        drawPixel(x, y) //ставим первую точку
+        drawPixel(x, y, intens) //ставим первую точку
         //все последующие точки возможно надо сдвигать, поэтому первую ставим вне цикла
         for (t in 0 until el)  //идём по всем точкам, начиная со второй и до последней
         {
@@ -126,15 +133,15 @@ class DrawUtil(private val width: Double, private val height: Double, private va
                 x += pdx //продолжить тянуть прямую дальше, т.е. сдвинуть влево или вправо, если
                 y += pdy //цикл идёт по иксу; сдвинуть вверх или вниз, если по y
             }
-            drawPixel(x, y)
+            drawPixel(x, y, intens)
         }
     }
 
-    private fun drawPixel(x: Int, y: Int) {
+    private fun drawPixel(x: Int, y: Int, intens: Double) {
         if (height < y || y < 0 || width < x || x < 0) {
             return
         }
-        pw.setColor(x, y, Color.BLACK)
+        pw.setColor(x, y, Color.rgb((intens*14).toInt(), (intens * 110).toInt(), (intens*54).toInt()))
     }
 
     private fun round(x: Double): Int {

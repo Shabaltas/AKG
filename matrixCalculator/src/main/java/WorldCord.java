@@ -251,4 +251,31 @@ public class WorldCord {
         double z = vector1.getEntry(0) * vector2.getEntry(1) - vector1.getEntry(1) * vector2.getEntry(0);
         return new ArrayRealVector(new double[]{ x, y, z}, false);
     }
+
+    private  RealVector cross(double[] vector1, double[] vector2) {
+        double x = vector1[1] * vector2[2] - vector1[2]* vector2[1];
+        double y = vector1[2] * vector2[0] - vector1[0] * vector2[2];
+        double z = vector1[0] * vector2[1] - vector1[1] * vector2[0];
+        return new ArrayRealVector(new double[]{ x, y, z}, false);
+    }
+
+    private RealVector getVectorFromPoints(double[] begin, double[] end) {
+        return new ArrayRealVector(new double[] {
+                end[0] - begin[0],
+                end[1] - begin[1],
+                end[2] - begin[2]
+        }, false);
+    }
+
+    public double needToDraw(Polygon polygon) {
+        double[] v1 = transformedVertices.get(polygon.getVerticeNumber(0) - 1).getVector();
+        double[] v2 = transformedVertices.get(polygon.getVerticeNumber(1) - 1).getVector();
+        double[] v3 = transformedVertices.get(polygon.getVerticeNumber(2) - 1).getVector();
+
+        return cross(
+                getVectorFromPoints(v1, v2),
+                getVectorFromPoints(v1, v3))
+                .unitVector()
+                .cosine(getVectorFromPoints(v1, eye.toArray()));
+    }
 }

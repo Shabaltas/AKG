@@ -4,9 +4,7 @@ import entity.Vertice;
 import org.apache.commons.math3.linear.ArrayRealVector;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.StringTokenizer;
+import java.util.*;
 
 public class ObjParser {
     private List<Vertice> vertices = new ArrayList<Vertice>();
@@ -37,7 +35,7 @@ public class ObjParser {
                     int v2 = Integer.parseInt(fToken.substring(0, fToken.indexOf("/")));
                     fToken = lineTokenizer.nextToken();
                     int v3 = Integer.parseInt(fToken.substring(0, fToken.indexOf("/")));
-                    polygons.add(new Polygon(v1, v2, v3));
+                    polygons.add(new Polygon(vertices,  Arrays.asList(v1, v2, v3)));
                 }
             }
         }
