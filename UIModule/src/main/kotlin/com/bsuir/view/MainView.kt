@@ -19,7 +19,7 @@ class MainView : View() {
     private val width = canvas.width
     private val height = canvas.height
     private val angleStep = 0.1;
-    private val step = 0.02;
+    private val step = 0.1;
     private val drawUtils: DrawUtil
     init {
         drawUtils = DrawUtil(width, height, canvas);
@@ -27,9 +27,10 @@ class MainView : View() {
         worldcords.polygons.forEach{
             drawUtils.drawPolygon(it, worldcords.readyVertices);
         }
+
         canvas.setOnScroll { scrollEvent ->
             //TODO whats wrong with X
-            worldcords.translateVertices(doubleArrayOf(0.1 * sign(scrollEvent.deltaX) , -0.1 * sign(scrollEvent.deltaY), 0.0));
+            worldcords.translateVertices(doubleArrayOf(-0.1 * sign(scrollEvent.deltaX) , 0.1 * sign(scrollEvent.deltaY), 0.0));
             drawUtils.redrawPolygons(worldcords.lastTransform())
         }
         canvas.setOnKeyPressed { keyEvent ->
@@ -44,42 +45,35 @@ class MainView : View() {
                     worldcords.scaleVertices(doubleArrayOf(1.2, 1.2, 1.2))
                 }
                 KeyCode.RIGHT -> {
-                    if (keyEvent.isAltDown) {
-                        worldcords.turnWorldYVertices(angleStep)
-                    };
-                    else worldcords.turnYVertices(angleStep)
+                   worldcords.turnYVertices(angleStep)
                 }
                 KeyCode.LEFT -> {
-                    if (keyEvent.isAltDown) {
-                        worldcords.turnWorldYVertices(-angleStep)
-                    };
-                    else worldcords.turnYVertices(-angleStep)
+                    worldcords.turnYVertices(-angleStep)
                 }
                 KeyCode.UP -> {
-                   // if (keyEvent.isAltDown) worldcords.turnXVertices(angleStep);
-                    //else
                     worldcords.turnXVertices(-angleStep)
                 }
                 KeyCode.DOWN -> {
-                    //if (keyEvent.isAltDown) worldcords.turnXVertices(-angleStep);
-                    //else
-                    // worldcords.turnXVertices(angleStep)
+                     worldcords.turnXVertices(angleStep)
                 }
 
                 //camera
-                /*KeyCode.A -> {
-                    worldcords.translateVerticesCamera(doubleArrayOf(-step, 0.0, 0.0))//сместить центр
-                    //worldcords.translateVerticesCamera(doubleArrayOf(step, 0.0, 0.0)) //TODO whats wrong with X
-                }*/
-               /* KeyCode.D -> {
-                    worldcords.translateVertices(doubleArrayOf(step, 0.0, 0.0))
+                KeyCode.A -> {
+                    worldcords.changeCameraHorizontally(-angleStep)//сместить центр
+                    worldcords.allChangesMatrix()
+                }
+                KeyCode.D -> {
+                    worldcords.changeCameraHorizontally(angleStep)//сместить центр
+                    worldcords.allChangesMatrix()
                 }
                 KeyCode.W -> {
-                    worldcords.translateVertices(doubleArrayOf(0.0, step, 0.0))
+                    worldcords.changeCameraVertically(angleStep)//сместить центр
+                    worldcords.allChangesMatrix()
                 }
                 KeyCode.S -> {
-                    worldcords.translateVertices(doubleArrayOf(0.0, -step, 0.0))
-                }*/
+                    worldcords.changeCameraVertically(-angleStep)//сместить центр
+                    worldcords.allChangesMatrix()
+                }
 
             }
             drawUtils.redrawPolygons(worldcords.lastTransform())

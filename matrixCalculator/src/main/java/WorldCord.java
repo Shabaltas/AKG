@@ -47,8 +47,10 @@ public class WorldCord {
     }
 
     private List<Vertice> transformedVertices;
-    private RealVector eye, target, up;
+    private RealVector eye, target, up,
+                        XAxis, YAxis, ZAxis;
     private double width, height;
+
 
     public WorldCord(List<Vertice> vertices,List<Polygon> polygons, double viewWidth, double viewHeight) {
         transformedVertices = new ArrayList<>(vertices.size());
@@ -81,7 +83,7 @@ public class WorldCord {
         return view;
     }
 
-    public WorldCord changeCenter(double[] translation) {
+    public WorldCord translateVertices(double[] translation) {
         //translateMatrix.setColumn(3, new double[]{translation[0], translation[1], translation[2], 1});
         changeView(translation);
         allChangesMatrix();
@@ -89,7 +91,7 @@ public class WorldCord {
         return this;
     }
 
-    public WorldCord translateVertices(double[] translation) {
+    public WorldCord translateVerticesnew(double[] translation) {
         translateMatrix.setColumn(3, new double[]{translation[0], translation[1], translation[2], 1});
         sumTranslateMatrix.setEntry(0, 3, sumTranslateMatrix.getEntry(0, 3) + translation[0]);
         sumTranslateMatrix.setEntry(1, 3, sumTranslateMatrix.getEntry(1, 3) + translation[1]);
@@ -104,7 +106,7 @@ public class WorldCord {
         translateMatrix.setEntry(1, 3, translateMatrix.getEntry(1, 3) + translation[1]);
         translateMatrix.setEntry(2, 3, translateMatrix.getEntry(2, 3) + translation[2]);
 
-        return changeCenter(translation);
+        return translateVertices(translation);
     }
 
     public WorldCord scaleVertices(double[] scale) {
@@ -139,28 +141,8 @@ public class WorldCord {
         turnYMatrix.setEntry(0, 2, Math.sin(yAngleRadian));
         turnYMatrix.setEntry(2, 0, -Math.sin(yAngleRadian));
         turnYMatrix.setEntry(2, 2, Math.cos(yAngleRadian));
-        //vertices.forEach(v -> translate matrix with third column - v[x], v[y], v[z], 1 * turnY * translate matrix with third column - -v[x], -v[y], -v[z],)
-        transformedVertices.forEach(vertice -> {
-            RealMatrix m = translateMatrix.copy();
-            m.setColumn(3, vertice.getVector());
-            RealMatrix notm = m.copy();
-            notm.multiplyEntry(0, 3, -1);
-            notm.multiplyEntry(1, 3, -1);
-            notm.multiplyEntry(2, 3, -1);
-            double[] newCord = notm.multiply(turnYMatrix).multiply(m).operate(vertice.getVector());
-            vertice.setX(newCord[0]/newCord[3]);
-            vertice.setY(newCord[1]/newCord[3]);
-            vertice.setZ(newCord[2]/newCord[3]);
-            vertice.setW(newCord[3]/newCord[3]);
-        });
-        return this;
-    }
-
-    public WorldCord turnWorldYVertices(double yAngleRadian) {
-        turnYMatrix.setEntry(0,0, Math.cos(yAngleRadian));
-        turnYMatrix.setEntry(0, 2, Math.sin(yAngleRadian));
-        turnYMatrix.setEntry(2, 0, -Math.sin(yAngleRadian));
-        turnYMatrix.setEntry(2, 2, Math.cos(yAngleRadian));
+//        all = all.multiply(turnYMatrix);
+        //multiplyMatrix(turnYMatrix);
         transform(turnYMatrix);
         return this;
     }
@@ -192,6 +174,19 @@ public class WorldCord {
         return this;
     }
 
+    public void changeCameraHorizontally(double d) {
+       /* eye.setEntry(0, eye.getEntry(0) + d[0]);
+        eye.setEntry(1, eye.getEntry(1) + d[1]);
+        eye.setEntry(2, eye.getEntry(2) + d[2]);*/
+        target = target.add(XAxis.mapMultiply(d));
+        updateViewMatrix(eye, target, up);
+    }
+
+    public void changeCameraVertically(double d) {
+        eye.setEntry(1, eye.getEntry(1) + d);
+        updateViewMatrix(eye, target, up);
+    }
+
     private void changeView(double[] d) {
         eye.setEntry(0, eye.getEntry(0) + d[0]);
         eye.setEntry(1, eye.getEntry(1) + d[1]);
@@ -201,14 +196,13 @@ public class WorldCord {
         target.setEntry(1, target.getEntry(1) + d[1]);
         target.setEntry(2, target.getEntry(2) + d[2]);
 
-
         updateViewMatrix(eye, target, up);
     }
 
     private void updateViewMatrix(RealVector eye, RealVector target, RealVector up) {
-        RealVector ZAxis = eye.subtract(target).unitVector();
-        RealVector XAxis = cross(up, ZAxis).unitVector();
-        RealVector YAxis = up;//cross(ZAxis, XAxis).unitVector();
+        ZAxis = eye.subtract(target).unitVector();
+        XAxis = cross(up, ZAxis).unitVector();
+        YAxis = up;//cross(ZAxis, XAxis).unitVector();
         view = MatrixUtils.createRealMatrix(new double[][]{
                 {XAxis.getEntry(0), XAxis.getEntry(1), XAxis.getEntry(2), -scalarMultiply(XAxis, eye)},
                 {YAxis.getEntry(0), YAxis.getEntry(1), YAxis.getEntry(2), -scalarMultiply(YAxis, eye)},
@@ -246,12 +240,12 @@ public class WorldCord {
         });
         return this;
     }
-    private double scalarMultiply(RealVector v1, RealVector v2) {
+    private  double scalarMultiply(RealVector v1, RealVector v2) {
         return v1.getEntry(0) * v2.getEntry(0)
                 + v1.getEntry(1) * v2.getEntry(1)
                 + v1.getEntry(2) * v2.getEntry(2);
     }
-    public static RealVector cross(RealVector vector1, RealVector vector2) {
+    private  RealVector cross(RealVector vector1, RealVector vector2) {
         double x = vector1.getEntry(1) * vector2.getEntry(2) - vector1.getEntry(2) * vector2.getEntry(1);
         double y = vector1.getEntry(2) * vector2.getEntry(0) - vector1.getEntry(0) * vector2.getEntry(2);
         double z = vector1.getEntry(0) * vector2.getEntry(1) - vector1.getEntry(1) * vector2.getEntry(0);
